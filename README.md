@@ -17,4 +17,4 @@ A full-stack application to track and optimize energy usage with AI predictions.
 [Add link when deployed]
 
 ## Author
-Group 6 - Database Systems Project
+HUNDERA TEDESSA BEGI
