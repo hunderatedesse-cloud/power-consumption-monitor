@@ -48,19 +48,3 @@ Authentication JWT, bcryptjs
 Email Nodemailer (Gmail SMTP)
 Export  PDFKit, QRCode
 
- 📁 Project Structure
-
-power-consumption-monitor/
-├── backend/
-│ ├── server.js # Main backend logic
-│ ├── models/ # MongoDB schemas
-│ ├── routes/ # API endpoints
-│ └── package.json
-├── frontend/
-│ ├── dashboard.html # Main dashboard (Ethiopian version)
-│ ├── settings.html # Multi-language settings
-│ ├── login.html # Login page
-│ ├── forgot-password.html
-│ ├── reset-password.html
-│ └── css/ # Stylesheets
-└── README.md
