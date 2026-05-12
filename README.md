@@ -42,9 +42,24 @@ Analytics & Tracking
  Layer With Technology
  
 1.Backend  Node.js, Express.js 
+
 2.Frontend HTML5, CSS3, JavaScript, Chart.js
+
 3.Database MongoDB, Mongoose ODM
+
 4.Authentication JWT, bcryptjs 
+
 5.Email Nodemailer (Gmail SMTP)
+
 6.Export  PDFKit, QRCode
 
+ 👨‍💻 Author
+
+HUNDERA TEDESSA BEGI
+
+- GitHub: [@hunderatedesse-cloud](https://github.com/hunderatedesse-cloud)
+- Email: hunderatedesse@gmail.com
+
+ 📄 License
+
+MIT License - See [LICENSE](LICENSE) file for details
