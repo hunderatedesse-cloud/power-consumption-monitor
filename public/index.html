@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Power Monitor Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #667eea;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .devices {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .device-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .add-btn {
+            background: #28a745;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>⚡ Power Consumption Monitor</h1>
+        <p>Group 6 - Database Systems Project</p>
+
+        <div class="stats">
+            <div class="card">
+                <h3>Today's Usage</h3>
+                <div class="value" id="todayUsage">Loading...</div>
+                <small>kWh</small>
+            </div>
+            <div class="card">
+                <h3>Estimated Cost</h3>
+                <div class="value" id="estimatedCost">Loading...</div>
+                <small>This month</small>
+            </div>
+            <div class="card">
+                <h3>Carbon Footprint</h3>
+                <div class="value" id="carbonFootprint">Loading...</div>
+                <small>kg CO2</small>
+            </div>
+            <div class="card">
+                <h3>Peak Usage</h3>
+                <div class="value" id="peakUsage">Loading...</div>
+                <small>kWh</small>
+            </div>
+        </div>
+
+        <div class="devices">
+            <h3>🔌 My Devices</h3>
+            <button class="add-btn" onclick="addSampleDevice()">+ Add Sample Device</button>
+            <div id="devicesList">Loading devices...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        const userId = 'user123'; // Using existing test user
+
+        async function loadData() {
+            try {
+                // Load summary
+                const summaryRes = await fetch(`${API_URL}/analytics/summary/${userId}`);
+                const summary = await summaryRes.json();
+
+                if (summary.success) {
+                    document.getElementById('todayUsage').innerText = summary.data.todayUsage;
+                    document.getElementById('estimatedCost').innerText = summary.data.estimatedCost;
+                    document.getElementById('carbonFootprint').innerText = summary.data.carbonFootprint;
+                    document.getElementById('peakUsage').innerText = summary.data.peakUsage;
+                }
+
+                // Load devices
+                const devicesRes = await fetch(`${API_URL}/devices/user/${userId}`);
+                const devices = await devicesRes.json();
+
+                if (devices.success && devices.data.length > 0) {
+                    const devicesList = document.getElementById('devicesList');
+                    devicesList.innerHTML = '';
+
+                    devices.data.forEach(device => {
+                        const dailyKwh = device.dailyKwh || (device.wattage * device.quantity * device.avgDailyHours / 1000);
+                        devicesList.innerHTML += `
+                            <div class="device-item">
+                                <div>
+                                    <strong>${device.name}</strong><br>
+                                    <small>${device.category} | ${device.wattage}W | ${device.avgDailyHours} hrs/day</small>
+                                </div>
+                                <div>
+                                    ${dailyKwh} kWh/day
+                                    <button onclick="deleteDevice('${device._id}')">Remove</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    document.getElementById('devicesList').innerHTML = '<p>No devices yet. Click "Add Sample Device"</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('todayUsage').innerText = 'Error';
+                document.getElementById('devicesList').innerHTML = '<p>Cannot connect to backend. Make sure server is running on port 5000</p>';
+            }
+        }
+
+        async function addSampleDevice() {
+            const deviceData = {
+                user: userId,
+                name: 'Sample Heater',
+                category: 'Heater',
+                wattage: 1500,
+                quantity: 1,
+                avgDailyHours: 3
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/devices`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(deviceData)
+                });
+
+                if (response.ok) {
+                    alert('Device added!');
+                    loadData();
+                }
+            } catch (error) {
+                alert('Error adding device');
+            }
+        }
+
+        async function deleteDevice(deviceId) {
+            if (confirm('Remove this device?')) {
+                try {
+                    await fetch(`${API_URL}/devices/${deviceId}`, {
+                        method: 'DELETE'
+                    });
+                    loadData();
+                } catch (error) {
+                    alert('Error deleting device');
+                }
+            }
+        }
+
+        // Load data when page opens
+        loadData();
+    </script>
+</body>
+
+</html>hzcv try { await fetch(`${API_URL}/devices/${deviceId}`, { method: 'DELETE' }); loadData(); } catch (error) { alert('Error deleting device'); } } } // Load data when page opens loadData();
+</script>
+</body>
+
+</html>hzcv

@@ -1,5 +1,10 @@
 {
   "dependencies": {
+<<<<<<< HEAD
     "nodemailer": "^8.0.7"
+=======
+    "express-rate-limit": "^8.3.2",
+    "express-validator": "^7.3.2"
+>>>>>>> b086afd6ead13db3d5f8f3dbf9b3e9bf8577b8ea
   }
 }

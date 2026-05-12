@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Power Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            max-width: 90%;
+            padding: 40px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .toggle {
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+            cursor: pointer;
+        }
+        
+        .toggle:hover {
+            text-decoration: underline;
+        }
+        
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+        
+        .success {
+            background: #efe;
+            color: #3c3;
+            border-left: 4px solid #3c3;
+        }
+        
+        .features {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .features span {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>⚡ Power Monitor</h2>
+        <div class="subtitle">Track your energy consumption</div>
+
+        <!-- Login Form -->
+        <div id="loginForm">
+            <div class="input-group">
+                <input type="email" id="loginEmail" placeholder="Email Address">
+            </div>
+            <div class="input-group">
+                <input type="password" id="loginPassword" placeholder="Password">
+            </div>
+            <button onclick="doLogin()">🔐 Login</button>
+            <div class="toggle" onclick="showRegisterForm()">📝 Create New Account</div>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" style="display: none;">
+            <div class="input-group">
+                <input type="text" id="regName" placeholder="Full Name">
+            </div>
+            <div class="input-group">
+                <input type="email" id="regEmail" placeholder="Email Address">
+            </div>
+            <div class="input-group">
+                <input type="password" id="regPassword" placeholder="Password (min 6 characters)">
+            </div>
+            <button onclick="doRegister()">📝 Register</button>
+            <div class="toggle" onclick="showLoginForm()">← Back to Login</div>
+        </div>
+
+        <div id="messageDiv"></div>
+
+        <div class="features">
+            <span>📊 Real-time Analytics</span>
+            <span>🔌 Device Tracking</span>
+            <span>📥 Export Reports</span>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('messageDiv').innerHTML = '';
+        }
+
+        function showLoginForm() {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('messageDiv').innerHTML = '';
+        }
+
+        function showMessage(msg, type) {
+            const msgDiv = document.getElementById('messageDiv');
+            msgDiv.innerHTML = '<div class="message ' + type + '">' + msg + '</div>';
+            setTimeout(function() {
+                msgDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + '/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userId', data.user.id);
+                    localStorage.setItem('userName', data.user.name);
+                    showMessage('✅ Login successful! Redirecting...', 'success');
+                    setTimeout(function() {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showMessage(data.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Cannot connect to server. Make sure backend is running on port 5000', 'error');
+            }
+        }
+
+        async function doRegister() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            if (!name || !email || !password) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + '/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userId', data.user.id);
+                    localStorage.setItem('userName', data.user.name);
+                    showMessage('✅ Registration successful! Redirecting...', 'success');
+                    setTimeout(function() {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showMessage(data.message || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Cannot connect to server. Make sure backend is running on port 5000', 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Ultimate Power Monitor - Dashboard</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            transition: all 0.3s ease;
+        }
+        /* Dark Mode */
+        
+        body.dark-mode {
+            background: #1a1a2e;
+        }
+        
+        body.dark-mode .stat-card,
+        body.dark-mode .add-section,
+        body.dark-mode .devices-section,
+        body.dark-mode .analytics-section {
+            background: #16213e;
+            color: #eee;
+        }
+        
+        body.dark-mode .device-item {
+            border-bottom-color: #333;
+        }
+        
+        body.dark-mode input,
+        body.dark-mode select {
+            background: #0f3460;
+            color: white;
+            border-color: #533483;
+        }
+        
+        body.dark-mode .stat-value {
+            color: #e94560;
+        }
+        /* Navbar */
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .logo h2 {
+            font-size: 24px;
+        }
+        
+        .logo small {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .user-info button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .user-info button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        /* Container */
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        /* Stats Grid */
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        /* Charts Section */
+        
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-card h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        canvas {
+            max-height: 250px;
+            width: 100%;
+        }
+        /* Add Device Section */
+        
+        .add-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .add-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .form-group {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 150px;
+        }
+        /* Analytics Section */
+        
+        .analytics-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .analytics-card {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .analytics-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        /* Buttons */
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+        /* Devices Section */
+        
+        .devices-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .device-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+        }
+        
+        .device-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .device-info h4 {
+            margin-bottom: 5px;
+        }
+        
+        .device-info p {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .device-usage {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        /* Loading */
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .loading-text {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+        /* Toast Notification */
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.error {
+            background: #dc3545;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        /* Responsive */
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-group {
+                display: block;
+                margin-bottom: 10px;
+            }
+            .form-group input,
+            .form-group select {
+                width: 100%;
+            }
+            .device-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+        }
+        /* Share Button */
+        
+        .share-btn {
+            background: #17a2b8;
+            margin-left: 10px;
+        }
+        /* Prediction Card */
+        
+        .prediction-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .prediction-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <h2>⚡ Ultimate Power Monitor</h2>
+            <small>Group 6 - Database Systems Project</small>
+        </div>
+        <div class="user-info">
+            <span id="userNameSpan">👤 User</span>
+            <button onclick="toggleDarkMode()">🌙 Dark Mode</button>
+            <button onclick="exportCSV()" style="background: #17a2b8;">📥 Export CSV</button>
+            <button onclick="shareReport()" class="share-btn">📤 Share</button>
+            <button onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Prediction Card -->
+        <div class="prediction-card" id="predictionCard">
+            <h3>🤖 AI Prediction</h3>
+            <div class="prediction-value" id="predictionValue">Loading...</div>
+            <p id="predictionMessage"></p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card" onclick="showDetail('usage')">
+                <h3>Today's Usage</h3>
+                <div class="stat-value" id="todayUsage">--</div>
+                <small>kWh</small>
+            </div>
+            <div class="stat-card" onclick="showDetail('cost')">
+                <h3>Estimated Cost</h3>
+                <div class="stat-value" id="estimatedCost">--</div>
+                <small>This month</small>
+            </div>
+            <div class="stat-card" onclick="showDetail('carbon')">
+                <h3>Carbon Footprint</h3>
+                <div class="stat-value" id="carbonFootprint">--</div>
+                <small>kg CO2</small>
+            </div>
+            <div class="stat-card" onclick="showDetail('peak')">
+                <h3>Peak Usage</h3>
+                <div class="stat-value" id="peakUsage">--</div>
+                <small>kWh</small>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <h3>📈 Weekly Consumption Trend</h3>
+                <canvas id="weeklyChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>🥧 Consumption by Category</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Comparison Analytics -->
+        <div class="analytics-section">
+            <h3>📊 Comparison Analytics</h3>
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h4>Your Usage</h4>
+                    <div class="analytics-value" id="yourUsage">--</div>
+                    <small>kWh/day</small>
+                </div>
+                <div class="analytics-card">
+                    <h4>Average User</h4>
+                    <div class="analytics-value" id="avgUsage">--</div>
+                    <small>kWh/day</small>
+                </div>
+                <div class="analytics-card">
+                    <h4>Percentile</h4>
+                    <div class="analytics-value" id="percentile">--</div>
+                    <small>%</small>
+                </div>
+            </div>
+            <p id="comparisonMessage" style="text-align: center; margin-top: 15px;"></p>
+        </div>
+
+        <!-- Add Device -->
+        <div class="add-section">
+            <h3>➕ Add New Device</h3>
+            <div class="form-group">
+                <input type="text" id="deviceName" placeholder="Device Name">
+            </div>
+            <div class="form-group">
+                <select id="deviceCategory">
+                    <option value="AC">❄️ AC</option>
+                    <option value="Heater">🔥 Heater</option>
+                    <option value="Refrigerator">🧊 Refrigerator</option>
+                    <option value="Lighting">💡 Lighting</option>
+                    <option value="Entertainment">📺 Entertainment</option>
+                    <option value="Kitchen">🍳 Kitchen</option>
+                    <option value="Other">🔌 Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="number" id="deviceWattage" placeholder="Wattage (W)">
+            </div>
+            <div class="form-group">
+                <input type="number" id="deviceHours" placeholder="Hours/day" value="2">
+            </div>
+            <div class="form-group">
+                <input type="number" id="deviceQuantity" placeholder="Quantity" value="1">
+            </div>
+            <button class="btn-primary" onclick="addDevice()">➕ Add Device</button>
+        </div>
+
+        <!-- Devices List -->
+        <div class="devices-section">
+            <h3>🔌 My Devices</h3>
+            <div id="devicesList" class="loading-text">Loading devices...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let userId = localStorage.getItem('userId');
+        let weeklyChart = null;
+        let categoryChart = null;
+
+        if (!userId) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('userNameSpan').innerHTML = '👤 ' + (localStorage.getItem('userName') || 'User');
+
+        function getDeviceIcon(category) {
+            const icons = {
+                'AC': '❄️',
+                'Heater': '🔥',
+                'Refrigerator': '🧊',
+                'Lighting': '💡',
+                'Entertainment': '📺',
+                'Kitchen': '🍳',
+                'Other': '🔌'
+            };
+            return icons[category] || '⚡';
+        }
+
+        function showToast(message, isError) {
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function showDetail(type) {
+            const messages = {
+                usage: 'Total energy consumed today from all active devices',
+                cost: 'Estimated monthly cost based on your electricity rate',
+                carbon: 'Carbon dioxide emissions based on energy usage',
+                peak: 'Highest hourly consumption today'
+            };
+            showToast(messages[type] || 'Click on devices for more info');
+        }
+
+        async function loadAllData() {
+            await loadSummary();
+            await loadDevices();
+            await loadCharts();
+            await loadComparison();
+            await loadPrediction();
+        }
+
+        async function loadSummary() {
+            try {
+                const response = await fetch(`${API_URL}/analytics/summary/${userId}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('todayUsage').innerHTML = data.data.todayUsage;
+                    document.getElementById('estimatedCost').innerHTML = data.data.estimatedCost;
+                    document.getElementById('carbonFootprint').innerHTML = data.data.carbonFootprint;
+                    document.getElementById('peakUsage').innerHTML = data.data.peakUsage;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadPrediction() {
+            try {
+                const response = await fetch(`${API_URL}/analytics/predict/${userId}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('predictionValue').innerHTML = data.data.predictedUsage + ' kWh';
+                    document.getElementById('predictionMessage').innerHTML = data.data.suggestion;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadComparison() {
+            try {
+                const response = await fetch(`${API_URL}/analytics/compare/${userId}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('yourUsage').innerHTML = data.data.yourUsage;
+                    document.getElementById('avgUsage').innerHTML = data.data.averageUsage;
+                    document.getElementById('percentile').innerHTML = data.data.percentile + '%';
+                    document.getElementById('comparisonMessage').innerHTML = data.data.message;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadCharts() {
+            try {
+                // Weekly chart
+                const weeklyRes = await fetch(`${API_URL}/analytics/weekly/${userId}`);
+                const weekly = await weeklyRes.json();
+
+                const ctx1 = document.getElementById('weeklyChart').getContext('2d');
+                if (weeklyChart) weeklyChart.destroy();
+                weeklyChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: weekly.data.map(d => d.day),
+                        datasets: [{
+                            label: 'kWh',
+                            data: weekly.data.map(d => d.consumption),
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102,126,234,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true
+                    }
+                });
+
+                // Category chart
+                const catRes = await fetch(`${API_URL}/analytics/by-category/${userId}`);
+                const categories = await catRes.json();
+
+                const ctx2 = document.getElementById('categoryChart').getContext('2d');
+                if (categoryChart) categoryChart.destroy();
+                categoryChart = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories.data.map(c => c.category),
+                        datasets: [{
+                            data: categories.data.map(c => c.consumption),
+                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true
+                    }
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadDevices() {
+            const devicesDiv = document.getElementById('devicesList');
+            devicesDiv.innerHTML = '<div class="spinner"></div>';
+
+            try {
+                const response = await fetch(`${API_URL}/devices/user/${userId}`);
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    devicesDiv.innerHTML = '';
+                    for (let i = 0; i < data.data.length; i++) {
+                        const d = data.data[i];
+                        const kwh = (d.wattage * d.quantity * d.avgDailyHours / 1000).toFixed(2);
+                        devicesDiv.innerHTML += `
+                            <div class="device-item">
+                                <div class="device-info">
+                                    <h4>${getDeviceIcon(d.category)} ${d.name}</h4>
+                                    <p>${d.category} | ${d.wattage}W | ${d.avgDailyHours} hrs/day | Qty: ${d.quantity}</p>
+                                </div>
+                                <div>
+                                    <span class="device-usage">${kwh} kWh/day</span>
+                                    <button class="btn-danger" onclick="deleteDevice('${d._id}')">🗑️ Remove</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    devicesDiv.innerHTML = '<div class="loading-text">📭 No devices yet. Add your first device above!</div>';
+                }
+            } catch (error) {
+                devicesDiv.innerHTML = '<div class="loading-text">❌ Error loading devices</div>';
+            }
+        }
+
+        async function addDevice() {
+            const name = document.getElementById('deviceName').value;
+            const category = document.getElementById('deviceCategory').value;
+            const wattage = parseInt(document.getElementById('deviceWattage').value);
+            const hours = parseFloat(document.getElementById('deviceHours').value);
+            const quantity = parseInt(document.getElementById('deviceQuantity').value);
+
+            if (!name || !wattage) {
+                showToast('Please fill device name and wattage', true);
+                return;
+            }
+
+            if (hours > 24) {
+                showToast('Hours cannot exceed 24 per day!', true);
+                return;
+            }
+
+            const deviceData = {
+                user: userId,
+                name,
+                category,
+                wattage,
+                avgDailyHours: hours,
+                quantity
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/devices`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(deviceData)
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✅ Device added successfully!');
+                    document.getElementById('deviceName').value = '';
+                    document.getElementById('deviceWattage').value = '';
+                    loadAllData();
+                } else {
+                    showToast('Error: ' + (data.error || 'Unknown error'), true);
+                }
+            } catch (error) {
+                showToast('Error adding device', true);
+            }
+        }
+
+        async function deleteDevice(deviceId) {
+            if (confirm('Are you sure you want to remove this device?')) {
+                try {
+                    const response = await fetch(`${API_URL}/devices/${deviceId}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast('🗑️ Device removed successfully!');
+                        loadAllData();
+                    } else {
+                        showToast('Error deleting device', true);
+                    }
+                } catch (error) {
+                    showToast('Error deleting device', true);
+                }
+            }
+        }
+
+        async function exportCSV() {
+            try {
+                window.open(`${API_URL}/export/csv/${userId}`, '_blank');
+                showToast('📥 Download started!');
+            } catch (error) {
+                showToast('Error exporting data', true);
+            }
+        }
+
+        async function shareReport() {
+            const summary = await fetch(`${API_URL}/analytics/summary/${userId}`);
+            const data = await summary.json();
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Energy Report',
+                    text: `I used ${data.data.todayUsage} kWh today!`,
+                    url: window.location.href
+                });
+            } else {
+                showToast('Share not supported on this browser');
+            }
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        loadAllData();
+    </script>
+</body>
+
+</html>
