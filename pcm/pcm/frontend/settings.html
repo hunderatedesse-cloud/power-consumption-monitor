@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Power Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h2 { text-align: center; color: #333; margin-bottom: 30px; }
+        
+        /* Language Selector */
+        .language-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        .lang-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        .lang-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        input:focus { outline: none; border-color: #667eea; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .message { margin-top: 20px; padding: 12px; border-radius: 10px; display: none; }
+        .message.success { background: #d4edda; color: #155724; display: block; }
+        .message.error { background: #f8d7da; color: #721c24; display: block; }
+        .back-link { text-align: center; margin-top: 20px; }
+        .back-link a { color: #667eea; text-decoration: none; }
+        
+        /* Amharic font support */
+        .lang-am {
+            font-family: 'Segoe UI', 'Ethiopic', 'Abyssinica SIL', 'Nyala', 'Noto Sans Ethiopic', sans-serif;
+        }
+        
+        /* Oromo font support */
+        .lang-om {
+            font-family: 'Segoe UI', 'Noto Sans', sans-serif;
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container { padding: 25px; }
+            .lang-btn { padding: 6px 12px; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="pageTitle">🔐 Change Password</h2>
+        
+        <!-- Language Selector -->
+        <div class="language-selector">
+            <button class="lang-btn active" onclick="setLanguage('en')">🇬🇧 English</button>
+            <button class="lang-btn" onclick="setLanguage('am')">🇪🇹 አማርኛ</button>
+            <button class="lang-btn" onclick="setLanguage('om')">🇪🇹 Oromoo</button>
+        </div>
+        
+        <div class="form-group">
+            <label id="currentPasswordLabel">Current Password</label>
+            <input type="password" id="currentPassword" placeholder="Enter current password">
+        </div>
+        <div class="form-group">
+            <label id="newPasswordLabel">New Password</label>
+            <input type="password" id="newPassword" placeholder="Enter new password (min 6 characters)">
+        </div>
+        <div class="form-group">
+            <label id="confirmPasswordLabel">Confirm New Password</label>
+            <input type="password" id="confirmPassword" placeholder="Confirm new password">
+        </div>
+        <button class="btn" id="changePasswordBtn" onclick="changePassword()">Change Password</button>
+        <div id="message" class="message"></div>
+        <div class="back-link"><a href="dashboard.html" id="backLink">← Back to Dashboard</a></div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        const userId = localStorage.getItem('userId');
+        if (!userId) window.location.href = 'login.html';
+        
+        // ============================================
+        // TRANSLATIONS (English, Amharic, Oromo)
+        // ============================================
+        const translations = {
+            en: {
+                pageTitle: "🔐 Change Password",
+                currentPasswordLabel: "Current Password",
+                currentPasswordPlaceholder: "Enter current password",
+                newPasswordLabel: "New Password",
+                newPasswordPlaceholder: "Enter new password (min 6 characters)",
+                confirmPasswordLabel: "Confirm New Password",
+                confirmPasswordPlaceholder: "Confirm new password",
+                changePasswordBtn: "Change Password",
+                backLink: "← Back to Dashboard",
+                fillAllFields: "Please fill all fields",
+                passwordsDoNotMatch: "New passwords do not match",
+                passwordMinLength: "Password must be at least 6 characters",
+                successMessage: "✅ Password changed successfully! Please login again.",
+                failedMessage: "Failed to change password",
+                networkError: "Network error. Please try again."
+            },
+            am: {
+                pageTitle: "🔐 የይለፍ ቃል ለውጥ",
+                currentPasswordLabel: "አሁን ያለው የይለፍ ቃል",
+                currentPasswordPlaceholder: "አሁን ያለው የይለፍ ቃል ያስገቡ",
+                newPasswordLabel: "አዲስ የይለፍ ቃል",
+                newPasswordPlaceholder: "አዲስ የይለፍ ቃል ያስገቡ (ቢያንስ 6 ቁምፊዎች)",
+                confirmPasswordLabel: "አዲስ የይለፍ ቃል አረጋግጥ",
+                confirmPasswordPlaceholder: "አዲስ የይለፍ ቃል ያረጋግጡ",
+                changePasswordBtn: "የይለፍ ቃል ለውጥ",
+                backLink: "← ወደ ዳሽቦርድ ተመለስ",
+                fillAllFields: "እባክዎ ሁሉንም መስኮች ይሙሉ",
+                passwordsDoNotMatch: "አዲሶቹ የይለፍ ቃላት አይዛመዱም",
+                passwordMinLength: "የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት",
+                successMessage: "✅ የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል! እባክዎ እንደገና ይግቡ።",
+                failedMessage: "የይለፍ ቃል መቀየር አልተሳካም",
+                networkError: "የአውታረ መረብ ችግር እባክዎ እንደገና ይሞክሩ።"
+            },
+            om: {
+                pageTitle: "🔐 Jecha Iccitii Jijjiiri",
+                currentPasswordLabel: "Jecha Iccitii Ammaa",
+                currentPasswordPlaceholder: "Jecha iccitii ammaa galchi",
+                newPasswordLabel: "Jecha Iccitii Haaraa",
+                newPasswordPlaceholder: "Jecha iccitii haaraa galchi (xiqqaan 6 arfii)",
+                confirmPasswordLabel: "Jecha Iccitii Haaraa Mirkaneessi",
+                confirmPasswordPlaceholder: "Jecha iccitii haaraa mirkaneessi",
+                changePasswordBtn: "Jecha Iccitii Jijjiiri",
+                backLink: "← Daashboordiitti Deebi'i",
+                fillAllFields: "Maaloo dirreewwan hunda guuti",
+                passwordsDoNotMatch: "Jechoonni iccitii haaraa wal hin qabne",
+                passwordMinLength: "Jechi iccitii xiqqaan 6 arfii ta'uu qaba",
+                successMessage: "✅ Jechi iccitii keessan milkaa'inaan jijjiirame! Maaloo irra deebi'ii seenni.",
+                failedMessage: "Jecha iccitii jijjiiruu hin milkoofne",
+                networkError: "Dogoggora neetworkii. Maaloo irra deebi'ii yaali."
+            }
+        };
+        
+        let currentLanguage = localStorage.getItem('language') || 'en';
+        
+        // Apply language to all elements
+        function applyLanguage() {
+            const t = translations[currentLanguage];
+            document.getElementById('pageTitle').innerText = t.pageTitle;
+            document.getElementById('currentPasswordLabel').innerText = t.currentPasswordLabel;
+            document.getElementById('newPasswordLabel').innerText = t.newPasswordLabel;
+            document.getElementById('confirmPasswordLabel').innerText = t.confirmPasswordLabel;
+            document.getElementById('changePasswordBtn').innerText = t.changePasswordBtn;
+            document.getElementById('backLink').innerHTML = t.backLink;
+            
+            // Update placeholders
+            document.getElementById('currentPassword').placeholder = t.currentPasswordPlaceholder;
+            document.getElementById('newPassword').placeholder = t.newPasswordPlaceholder;
+            document.getElementById('confirmPassword').placeholder = t.confirmPasswordPlaceholder;
+            
+            // Update body class for font support
+            document.body.classList.remove('lang-am', 'lang-om');
+            if (currentLanguage === 'am') {
+                document.body.classList.add('lang-am');
+            } else if (currentLanguage === 'om') {
+                document.body.classList.add('lang-om');
+            }
+            
+            // Update active button state
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (currentLanguage === 'en') {
+                document.querySelector('.lang-btn:nth-child(1)').classList.add('active');
+            } else if (currentLanguage === 'am') {
+                document.querySelector('.lang-btn:nth-child(2)').classList.add('active');
+            } else if (currentLanguage === 'om') {
+                document.querySelector('.lang-btn:nth-child(3)').classList.add('active');
+            }
+        }
+        
+        // Set language function
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            applyLanguage();
+        }
+        
+        // Show message function (with language support)
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('message');
+            const t = translations[currentLanguage];
+            
+            // Map message to translated version if it matches known messages
+            let displayMsg = msg;
+            if (msg === 'Please fill all fields') displayMsg = t.fillAllFields;
+            else if (msg === 'New passwords do not match') displayMsg = t.passwordsDoNotMatch;
+            else if (msg === 'Password must be at least 6 characters') displayMsg = t.passwordMinLength;
+            else if (msg === '✅ Password changed successfully! Please login again.') displayMsg = t.successMessage;
+            else if (msg === 'Failed to change password') displayMsg = t.failedMessage;
+            else if (msg === 'Network error. Please try again.') displayMsg = t.networkError;
+            
+            messageDiv.textContent = displayMsg;
+            messageDiv.className = `message ${type}`;
+            setTimeout(() => { messageDiv.className = 'message'; }, 3000);
+        }
+        
+        // Change password function
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const t = translations[currentLanguage];
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showMessage(t.fillAllFields, 'error'); 
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showMessage(t.passwordsDoNotMatch, 'error'); 
+                return;
+            }
+            if (newPassword.length < 6) {
+                showMessage(t.passwordMinLength, 'error'); 
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, currentPassword, newPassword })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(t.successMessage, 'success');
+                    setTimeout(() => { 
+                        localStorage.clear(); 
+                        window.location.href = 'login.html'; 
+                    }, 2000);
+                } else {
+                    showMessage(data.message || t.failedMessage, 'error');
+                }
+            } catch (error) {
+                showMessage(t.networkError, 'error');
+            }
+        }
+        
+        // Initialize language on page load
+        applyLanguage();
+        
+        // Make functions available globally
+        window.setLanguage = setLanguage;
+        window.changePassword = changePassword;
+    </script>
+</body>
+</html>

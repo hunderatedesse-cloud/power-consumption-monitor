@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Ultimate Power Monitor | Smart Energy Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+
+        /* Dark Mode */
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+        }
+
+        body.dark-mode .stat-card,
+        body.dark-mode .prediction-card,
+        body.dark-mode .section,
+        body.dark-mode .chart-card,
+        body.dark-mode .gauge-container,
+        body.dark-mode .holiday-card {
+            background: #1a1a2e;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        body.dark-mode .stat-value {
+            color: #e94560;
+        }
+
+        body.dark-mode .navbar {
+            background: #1a1a2e;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        body.dark-mode .device-item {
+            border-bottom-color: #333;
+        }
+
+        body.dark-mode .device-item:hover {
+            background: #16213e;
+        }
+
+        body.dark-mode .tip-card {
+            background: #16213e;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .navbar h2 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+        }
+
+        .btn-sm {
+            background: #f0f2f5;
+            border: 1px solid #e0e0e0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-sm:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #333;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        /* Live Indicator */
+        .realtime-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.08);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 24px;
+        }
+
+        /* Two Column Layout for New Features */
+        .two-columns {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        /* Holiday Card */
+        .holiday-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .holiday-card h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .holiday-list {
+            list-style: none;
+        }
+
+        .holiday-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .holiday-list li:last-child {
+            border-bottom: none;
+        }
+
+        .holiday-date {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .season-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .season-rainy { background: #4a90e2; color: white; }
+        .season-dry { background: #f39c12; color: white; }
+        .season-belg { background: #27ae60; color: white; }
+
+        /* Quick Add Buttons */
+        .quick-add-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .quick-add-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 25px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-add-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Welcome Card */
+        .welcome-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 28px 32px;
+            border-radius: 28px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-card::before {
+            content: '⚡';
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            font-size: 120px;
+            opacity: 0.1;
+            transform: rotate(15deg);
+        }
+
+        .welcome-card h3 {
+            color: white;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .welcome-card p {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        /* Prediction Card */
+        .prediction-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 24px;
+            border-radius: 24px;
+            text-align: center;
+            margin-bottom: 28px;
+            box-shadow: 0 10px 30px rgba(102,126,234,0.25);
+        }
+
+        .prediction-card h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .prediction-value {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+        }
+
+        .stat-card h3 {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        /* Gauge Row */
+        .gauge-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .gauge-container {
+            background: white;
+            padding: 24px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .gauge-container h3 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .gauge-wrapper {
+            position: relative;
+            width: 200px;
+            margin: 0 auto;
+        }
+
+        .gauge-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        /* Insight Card */
+        .insight-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 18px 24px;
+            border-radius: 20px;
+            margin-bottom: 28px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .insight-card:hover {
+            transform: translateX(5px);
+        }
+
+        /* Progress Section */
+        .section {
+            background: white;
+            padding: 24px;
+            border-radius: 24px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .section h3 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .progress-ring {
+            position: relative;
+            display: inline-block;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 22px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        progress {
+            border-radius: 10px;
+            height: 10px;
+        }
+
+        progress::-webkit-progress-bar { background: #e0e0e0; border-radius: 10px; }
+        progress::-webkit-progress-value { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .chart-card h3 {
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        canvas {
+            max-height: 250px;
+            width: 100%;
+        }
+
+        /* Comparison Grid */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .comparison-card {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+
+        .comparison-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Form Groups */
+        .form-group {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 14px;
+            width: 170px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        /* Device Item */
+        .device-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background 0.3s;
+        }
+
+        .device-item:hover {
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .device-item h4 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .device-item p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .badge-info { background: #17a2b8; color: white; }
+        .badge-primary { background: #667eea; color: white; }
+        .badge-success { background: #28a745; color: white; }
+        .badge-warning { background: #ffc107; color: #333; }
+
+        /* Tips Grid */
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tip-card {
+            background: #f8f9fa;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border-left: 4px solid #28a745;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .tip-card:hover {
+            transform: translateX(5px);
+        }
+
+        /* Ethiopian Tip Card Special */
+        .ethiopian-tip {
+            border-left-color: #f39c12;
+            background: #fff8e7;
+        }
+
+        body.dark-mode .ethiopian-tip {
+            background: #2c2c3e;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #28a745;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 14px;
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Modal */
+        #qrModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Confetti Canvas */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1002;
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .gauge-row { grid-template-columns: 1fr; }
+            .two-columns { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 16px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+            .charts-section { grid-template-columns: 1fr; }
+            .form-group { display: block; margin-right: 0; }
+            .form-group input, .form-group select { width: 100%; }
+            .comparison-grid { grid-template-columns: 1fr; gap: 12px; }
+            .navbar { flex-direction: column; gap: 15px; text-align: center; }
+            .button-group { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confettiCanvas"></canvas>
+
+    <div class="navbar">
+        <h2>⚡ ULTIMATE POWER MONITOR | የኃይል ክትትል</h2>
+        <div class="button-group">
+            <span class="realtime-indicator"><span class="live-dot"></span> LIVE</span>
+            <button class="btn btn-info" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> Dark</button>
+            <button class="btn btn-info" onclick="window.location.href='settings.html'"><i class="fas fa-cog"></i> Settings</button>
+            <button class="btn btn-info" onclick="exportCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+            <button class="btn btn-info" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+            <button class="btn btn-info" onclick="shareReport()"><i class="fas fa-share-alt"></i> Share</button>
+            <button class="btn btn-info" onclick="showQR()"><i class="fas fa-qrcode"></i> QR</button>
+            <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Welcome Section -->
+        <div class="welcome-card">
+            <h3><i class="fas fa-hand-wave"></i> <span id="welcomeMessage"></span></h3>
+            <p id="savingsQuote">Loading your energy insights...</p>
+        </div>
+
+        <!-- Ethiopian Holidays & Seasons Section (NEW) -->
+        <div class="two-columns">
+            <!-- Ethiopian Holidays -->
+            <div class="holiday-card">
+                <h3><i class="fas fa-calendar-alt"></i> 🇪🇹 Ethiopian Holidays</h3>
+                <ul class="holiday-list" id="holidayList">
+                    <li><span class="holiday-date">Sep 11</span> Enkutatash (Ethiopian New Year)</li>
+                    <li><span class="holiday-date">Sep 27</span> Meskel (Finding of the True Cross)</li>
+                    <li><span class="holiday-date">Jan 7</span> Ethiopian Christmas (Genna)</li>
+                    <li><span class="holiday-date">Jan 19</span> Timkat (Epiphany)</li>
+                    <li><span class="holiday-date">Mar 2</span> Adwa Victory Day</li>
+                    <li><span class="holiday-date">Apr/May</span> Fasika (Easter)</li>
+                    <li><span class="holiday-date">May 5</span> Patriots' Victory Day</li>
+                    <li><span class="holiday-date">May 28</span> Derg Downfall Day</li>
+                </ul>
+                <div id="currentSeason" class="season-badge season-rainy">🌧️ Current: Rainy Season (Kiremt)</div>
+            </div>
+
+            <!-- Ethiopian Appliances Quick Add -->
+            <div class="holiday-card">
+                <h3><i class="fas fa-plug"></i> 🇪🇹 Common Ethiopian Appliances</h3>
+                <div class="quick-add-grid">
+                    <button class="quick-add-btn" onclick="quickAddDevice('Mitad (Injera Maker)', 2000, 1)">🍞 Mitad (2000W)</button>
+                    <button class="quick-add-btn" onclick="quickAddDevice('Refrigerator', 200, 24)">🧊 Refrigerator (200W)</button>
+                    <button class="quick-add-btn" onclick="quickAddDevice('TV - Satellite', 100, 5)">📺 Satellite TV (100W)</button>
+                    <button class="quick-add-btn" onclick="quickAddDevice('Electric Kettle', 1500, 1)">☕ Kettle (1500W)</button>
+                    <button class="quick-add-btn" onclick="quickAddDevice('Washing Machine', 500, 2)">🧺 Washer (500W)</button>
+                    <button class="quick-add-btn" onclick="quickAddDevice('Water Pump', 750, 3)">💧 Water Pump (750W)</button>
+                    <button class="quick-add-btn" onclick="quickAddDevice('Electric Stove', 3000, 2)">🍳 Stove (3000W)</button>
+                    <button class="quick-add-btn" onclick="quickAddDevice('Injera Fridge', 150, 24)">🍞 Injera Fridge (150W)</button>
+                    <button class="quick-add-btn" onclick="quickAddDevice('Coffee Maker (Jebena)', 800, 1)">☕ Jebena (800W)</button>
+                    <button class="quick-add-btn" onclick="quickAddDevice('Water Heater (Shower)', 2000, 1)">🚿 Water Heater (2000W)</button>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: 15px;">
+                    <i class="fas fa-info-circle"></i> Click any button to add device instantly!
+                </p>
+            </div>
+        </div>
+
+        <!-- AI Prediction -->
+        <div class="prediction-card">
+            <h3><i class="fas fa-brain"></i> AI ENERGY PREDICTION</h3>
+            <div class="prediction-value" id="predictionValue">--</div>
+            <p id="predictionMessage"></p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card" onclick="showDetail('usage')">
+                <h3><i class="fas fa-bolt"></i> TODAY'S USAGE</h3>
+                <div class="stat-value" id="todayUsage">--</div>
+                <small>kWh</small>
+            </div>
+            <div class="stat-card" onclick="showDetail('cost')">
+                <h3><i class="fas fa-dollar-sign"></i> ESTIMATED COST</h3>
+                <div class="stat-value" id="estimatedCost">--</div>
+                <small>This month (ETB)</small>
+            </div>
+            <div class="stat-card" onclick="showDetail('carbon')">
+                <h3><i class="fas fa-leaf"></i> CARBON FOOTPRINT</h3>
+                <div class="stat-value" id="carbonFootprint">--</div>
+                <small>kg CO₂</small>
+            </div>
+            <div class="stat-card" onclick="showDetail('peak')">
+                <h3><i class="fas fa-chart-line"></i> PEAK USAGE</h3>
+                <div class="stat-value" id="peakUsage">--</div>
+                <small>kWh</small>
+            </div>
+        </div>
+
+        <!-- Insight -->
+        <div class="insight-card">
+            <i class="fas fa-lightbulb"></i> <strong>ENERGY INSIGHT:</strong> <span id="energyInsight">Your AC uses the most energy! Setting to 24°C can save up to 30%.</span>
+        </div>
+
+        <!-- Gauges -->
+        <div class="gauge-row">
+            <div class="gauge-container">
+                <h3><i class="fas fa-tachometer-alt"></i> USAGE GAUGE</h3>
+                <div class="gauge-wrapper">
+                    <canvas id="usageGauge" width="200" height="200"></canvas>
+                    <div class="gauge-value" id="gaugePercentage">0%</div>
+                </div>
+                <span class="badge badge-info" style="margin-top: 15px;">CURRENT LOAD</span>
+            </div>
+            <div class="gauge-container">
+                <h3><i class="fas fa-chart-line"></i> EFFICIENCY SCORE</h3>
+                <div class="gauge-wrapper">
+                    <canvas id="efficiencyGauge" width="200" height="200"></canvas>
+                    <div class="gauge-value" id="efficiencyValue">0%</div>
+                </div>
+                <span class="badge badge-success" style="margin-top: 15px;">ENERGY RATING</span>
+            </div>
+        </div>
+
+        <!-- Daily Goal -->
+        <div class="section">
+            <h3><i class="fas fa-bullseye"></i> DAILY GOAL PROGRESS</h3>
+            <div style="display: flex; align-items: center; gap: 30px; flex-wrap: wrap;">
+                <div class="progress-ring">
+                    <svg width="120" height="120">
+                        <circle class="progress-ring-circle" stroke="#667eea" stroke-width="8" fill="transparent" r="52" cx="60" cy="60" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+                    </svg>
+                    <span class="progress-text" id="goalPercentage">0%</span>
+                </div>
+                <div style="flex: 1;">
+                    <p>🎯 <strong>Daily Target:</strong> <span id="dailyTarget">20 kWh</span></p>
+                    <p>🏆 <strong>Achievement:</strong> <span id="achievementMessage">Keep going!</span></p>
+                    <progress id="goalProgress" value="0" max="100" style="width: 100%; height: 8px;"></progress>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-line"></i> WEEKLY TREND <button class="btn btn-success" onclick="animateChart()" style="padding: 5px 12px; font-size: 11px;">▶ Animate</button></h3>
+                <canvas id="weeklyChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-pie"></i> BY CATEGORY</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Budget -->
+        <div class="section">
+            <h3><i class="fas fa-wallet"></i> MONTHLY BUDGET (ETB)</h3>
+            <div class="form-group"><input type="number" id="budgetAmount" placeholder="Budget (ETB)"></div>
+            <button class="btn btn-primary" onclick="setBudget()"><i class="fas fa-save"></i> Set Budget</button>
+            <div id="budgetStatus" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- Comparison -->
+        <div class="section">
+            <h3><i class="fas fa-chart-simple"></i> COMPARE WITH OTHERS</h3>
+            <div class="comparison-grid">
+                <div class="comparison-card"><h4>Your Usage</h4><div class="stat-value" style="font-size: 28px;" id="yourUsage">--</div><small>kWh/day</small><br><span class="badge badge-primary" id="yourRank">Top 50%</span></div>
+                <div class="comparison-card"><h4>Average User</h4><div class="stat-value" style="font-size: 28px;" id="avgUsage">--</div><small>kWh/day</small></div>
+                <div class="comparison-card"><h4>Percentile</h4><div class="stat-value" style="font-size: 28px;" id="percentile">--</div><small>%</small></div>
+            </div>
+            <p id="comparisonMessage" style="text-align:center; margin-top:15px;"></p>
+        </div>
+
+        <!-- Add Device -->
+        <div class="section">
+            <h3><i class="fas fa-plus-circle"></i> ADD NEW DEVICE</h3>
+            
+            <!-- Ethiopian Season Energy Tips (NEW) -->
+            <div style="background: #e8f4fd; padding: 12px; border-radius: 12px; margin-bottom: 20px;">
+                <i class="fas fa-cloud-sun-rain"></i> <strong id="seasonTipTitle">🌧️ Rainy Season Energy Tip:</strong>
+                <p id="seasonTipText" style="font-size: 13px; margin-top: 5px;">Use natural light during rainy season and keep windows closed to maintain warmth.</p>
+            </div>
+
+            <div class="form-group"><input type="text" id="deviceName" placeholder="Device Name"></div>
+            <div class="form-group">
+                <select id="deviceCategory">
+                    <option value="AC">❄️ AC</option>
+                    <option value="Heater">🔥 Heater</option>
+                    <option value="Refrigerator">🧊 Refrigerator</option>
+                    <option value="Lighting">💡 Lighting</option>
+                    <option value="Entertainment">📺 Entertainment</option>
+                    <option value="Kitchen">🍳 Kitchen (Mitad/Stove)</option>
+                    <option value="WaterPump">💧 Water Pump</option>
+                    <option value="Other">🔌 Other</option>
+                </select>
+            </div>
+            <div class="form-group"><input type="number" id="deviceWattage" placeholder="Wattage (W)"></div>
+            <div class="form-group"><input type="number" id="deviceHours" placeholder="Hours/day" value="2"></div>
+            <div class="form-group"><input type="number" id="deviceQuantity" placeholder="Qty" value="1"></div>
+            <button class="btn btn-primary" onclick="addDevice()"><i class="fas fa-plus"></i> Add Device</button>
+        </div>
+
+        <!-- Devices List -->
+        <div class="section">
+            <h3><i class="fas fa-microchip"></i> MY DEVICES</h3>
+            <div id="devicesList">Loading...</div>
+        </div>
+
+        <!-- Ethiopian Energy Saving Tips (NEW - Enhanced) -->
+        <div class="section">
+            <h3><i class="fas fa-lightbulb"></i> 🇪🇹 ETHIOPIAN ENERGY SAVING TIPS</h3>
+            <div class="tips-grid" id="ethiopianTipsList"></div>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qrModal">
+        <div style="background:white; padding:32px; border-radius:24px; text-align:center; max-width:90%; width:350px;">
+            <h3><i class="fas fa-qrcode"></i> SHARE REPORT</h3>
+            <img id="qrImage" style="width:200px; margin:20px auto; display:block;">
+            <button class="btn btn-primary" onclick="closeQR()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let userId = localStorage.getItem('userId');
+        let weeklyChart = null;
+        let categoryChart = null;
+        let usageGaugeChart = null;
+        let efficiencyGaugeChart = null;
+
+        if (!userId) {
+            window.location.href = 'login.html';
+        }
+
+        // ============================================
+        // ETHIOPIAN SEASON DETECTION
+        // ============================================
+        function getEthiopianSeason() {
+            const month = new Date().getMonth();
+            // Ethiopian seasons based on Gregorian months (approximate)
+            if (month >= 5 && month <= 8) { // June - September
+                return { name: 'Rainy Season (Kiremt)', tip: 'Use natural light, keep windows closed, unplug devices during storms', icon: '🌧️' };
+            } else if (month >= 9 && month <= 11) { // October - December (Dry season start)
+                return { name: 'Dry Season (Bega)', tip: 'Use fans instead of AC, wash clothes in cold water', icon: '☀️' };
+            } else if (month >= 0 && month <= 1) { // January - February (Dry)
+                return { name: 'Dry Season (Bega)', tip: 'Layer clothing instead of using heaters, use natural sunlight', icon: '☀️' };
+            } else { // March - May (Belg - small rains)
+                return { name: 'Small Rainy Season (Belg)', tip: 'Harvest rainwater for gardening, efficient water pump usage', icon: '🌦️' };
+            }
+        }
+
+        function updateSeasonDisplay() {
+            const season = getEthiopianSeason();
+            const seasonDiv = document.getElementById('currentSeason');
+            const tipTitle = document.getElementById('seasonTipTitle');
+            const tipText = document.getElementById('seasonTipText');
+            
+            if (seasonDiv) {
+                seasonDiv.className = `season-badge ${season.name.includes('Rainy') ? 'season-rainy' : (season.name.includes('Dry') ? 'season-dry' : 'season-belg')}`;
+                seasonDiv.innerHTML = `${season.icon} Current: ${season.name}`;
+            }
+            
+            if (tipTitle && tipText) {
+                tipTitle.innerHTML = `${season.icon} ${season.name} Energy Tip:`;
+                tipText.innerHTML = season.tip;
+            }
+        }
+
+        // ============================================
+        // ETHIOPIAN APPLIANCES QUICK ADD
+        // ============================================
+        async function quickAddDevice(name, wattage, hours) {
+            const category = getCategoryFromName(name);
+            try {
+                const res = await fetch(`${API_URL}/devices`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user: userId, 
+                        name: name, 
+                        category: category, 
+                        wattage: wattage, 
+                        avgDailyHours: hours, 
+                        quantity: 1 
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ Added ${name} (${wattage}W, ${hours}hrs/day)`, false);
+                    loadAll();
+                } else {
+                    showToast('Error adding device', true);
+                }
+            } catch(e) {
+                showToast('Error adding device', true);
+            }
+        }
+
+        function getCategoryFromName(name) {
+            if (name.includes('Mitad') || name.includes('Stove') || name.includes('Kettle') || name.includes('Jebena')) return 'Kitchen';
+            if (name.includes('Refrigerator') || name.includes('Fridge')) return 'Refrigerator';
+            if (name.includes('TV') || name.includes('Satellite')) return 'Entertainment';
+            if (name.includes('Water Pump')) return 'WaterPump';
+            if (name.includes('Heater')) return 'Heater';
+            if (name.includes('AC')) return 'AC';
+            return 'Other';
+        }
+
+        // ============================================
+        // ETHIOPIAN ENERGY TIPS
+        // ============================================
+        function loadEthiopianTips() {
+            const tips = [
+                { text: "🍞 Mitad (Injera Maker) uses high power - cook multiple injeras at once to save energy!", type: "ethiopian" },
+                { text: "🧊 Refrigerators in Ethiopia: Keep at 4°C, avoid overfilling, and clean coils every 3 months", type: "ethiopian" },
+                { text: "💧 Water pumps: Use timer switches to avoid running when not needed", type: "ethiopian" },
+                { text: "☕ Coffee makers (Jebena electric): Use insulated flask to keep coffee hot without reheating", type: "ethiopian" },
+                { text: "📺 Satellite TV receivers: Turn off completely when not watching (standby still uses power)", type: "ethiopian" },
+                { text: "⚡ During dry season (Bega): Use fans instead of AC - saves 70% energy", type: "ethiopian" },
+                { text: "🌧️ During rainy season (Kiremt): Use natural light during daytime", type: "ethiopian" },
+                { text: "🔌 Unplug phone chargers, TV, and satellite receiver when not in use", type: "ethiopian" },
+                { text: "💡 Replace traditional bulbs with LED - saves 80% electricity", type: "ethiopian" },
+                { text: "🧺 Wash clothes in cold water and use sun drying instead of electric dryers", type: "ethiopian" }
+            ];
+            
+            const tipsContainer = document.getElementById('ethiopianTipsList');
+            if (tipsContainer) {
+                tipsContainer.innerHTML = tips.map(tip => 
+                    `<div class="tip-card ethiopian-tip">${tip.text}</div>`
+                ).join('');
+            }
+        }
+
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
+
+        function showToast(msg, isError) {
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function showDetail(type) {
+            const msgs = {
+                usage: '⚡ Total energy consumed today',
+                cost: '💰 Estimated monthly cost in Ethiopian Birr',
+                carbon: '🌍 CO2 emissions from your usage',
+                peak: '📊 Highest hourly consumption'
+            };
+            showToast(msgs[type]);
+        }
+
+        function getDeviceIcon(category) {
+            const icons = { 
+                'AC': '❄️', 'Heater': '🔥', 'Refrigerator': '🧊', 
+                'Lighting': '💡', 'Entertainment': '📺', 'Kitchen': '🍳', 
+                'WaterPump': '💧', 'Other': '🔌' 
+            };
+            return icons[category] || '⚡';
+        }
+
+        // ============================================
+        // ANIMATIONS
+        // ============================================
+
+        function animateNumber(element, start, end, duration) {
+            if (!element) return;
+            const range = end - start;
+            const increment = range / (duration / 16);
+            let current = start;
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    clearInterval(timer);
+                    element.innerHTML = end.toFixed(1);
+                } else {
+                    element.innerHTML = current.toFixed(1);
+                }
+            }, 16);
+        }
+
+        function typeWriterEffect(element, text, speed = 40) {
+            if (!element) return;
+            let i = 0;
+            element.innerHTML = '';
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        function showConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const particles = [];
+            for (let i = 0; i < 120; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 6 + 3,
+                    speedY: Math.random() * 4 + 2,
+                    speedX: Math.random() * 2 - 1,
+                    color: `hsl(${Math.random() * 360}, 70%, 55%)`
+                });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                for (let p of particles) {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    if (p.y < canvas.height) {
+                        active = true;
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x, p.y, p.size, p.size);
+                    }
+                }
+                if (active) requestAnimationFrame(animate);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            animate();
+            setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 2500);
+        }
+
+        function updateProgressRing(percentage) {
+            const circle = document.querySelector('.progress-ring-circle');
+            if (circle) {
+                const radius = 52;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (percentage / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                const goalText = document.getElementById('goalPercentage');
+                if (goalText) goalText.innerText = `${Math.round(percentage)}%`;
+                const goalProgress = document.getElementById('goalProgress');
+                if (goalProgress) goalProgress.value = percentage;
+            }
+        }
+
+        async function updateGauges(usage) {
+            const maxUsage = 30;
+            const percentage = Math.min((usage / maxUsage) * 100, 100);
+            const efficiency = Math.max(100 - percentage, 0);
+            const gaugePct = document.getElementById('gaugePercentage');
+            const effVal = document.getElementById('efficiencyValue');
+            if (gaugePct) gaugePct.innerHTML = `${Math.round(percentage)}%`;
+            if (effVal) effVal.innerHTML = `${Math.round(efficiency)}%`;
+            
+            const gaugeCtx = document.getElementById('usageGauge');
+            if (gaugeCtx) {
+                if (usageGaugeChart) usageGaugeChart.destroy();
+                usageGaugeChart = new Chart(gaugeCtx, {
+                    type: 'doughnut',
+                    data: { datasets: [{ data: [percentage, 100 - percentage], backgroundColor: ['#667eea', '#e0e0e0'], borderWidth: 0, circumference: 180, rotation: 270 }] },
+                    options: { cutout: '70%', responsive: true }
+                });
+            }
+            const effCtx = document.getElementById('efficiencyGauge');
+            if (effCtx) {
+                if (efficiencyGaugeChart) efficiencyGaugeChart.destroy();
+                efficiencyGaugeChart = new Chart(effCtx, {
+                    type: 'doughnut',
+                    data: { datasets: [{ data: [efficiency, 100 - efficiency], backgroundColor: ['#28a745', '#e0e0e0'], borderWidth: 0, circumference: 180, rotation: 270 }] },
+                    options: { cutout: '70%', responsive: true }
+                });
+            }
+        }
+
+        function animateChart() {
+            if (weeklyChart) { weeklyChart.update(); showToast('📊 Chart animated!'); }
+        }
+
+        // ============================================
+        // DATA LOADING
+        // ============================================
+
+        async function loadAll() {
+            await loadSummary();
+            await loadDevices();
+            await loadCharts();
+            await loadPrediction();
+            await loadComparison();
+            await loadBudgetStatus();
+            await loadWelcomeData();
+            updateSeasonDisplay();
+        }
+
+        async function loadWelcomeData() {
+            const userName = localStorage.getItem('userName') || 'User';
+            typeWriterEffect(document.getElementById('welcomeMessage'), `Welcome back, ${userName}! 👋`);
+            try {
+                const res = await fetch(`${API_URL}/analytics/summary/${userId}`);
+                const data = await res.json();
+                if (data.success) {
+                    const usage = parseFloat(data.data.todayUsage);
+                    const quote = document.getElementById('savingsQuote');
+                    const rank = document.getElementById('yourRank');
+                    if (usage < 10) {
+                        if (quote) quote.innerHTML = "🎉 Amazing! You're saving 30% more energy than average! 🇪🇹";
+                        if (rank) rank.innerHTML = "🏆 Top Energy Saver";
+                    } else if (usage < 20) {
+                        if (quote) quote.innerHTML = "👍 Good job! Keep monitoring to save more!";
+                        if (rank) rank.innerHTML = "⭐ Good Progress";
+                    } else {
+                        if (quote) quote.innerHTML = "💡 Try reducing usage by unplugging unused devices";
+                        if (rank) rank.innerHTML = "📈 Needs Improvement";
+                    }
+                }
+            } catch(e) {}
+        }
+
+        async function loadSummary() {
+            try {
+                const res = await fetch(`${API_URL}/analytics/summary/${userId}`);
+                const data = await res.json();
+                if (data.success) {
+                    const usage = parseFloat(data.data.todayUsage);
+                    const carbon = parseFloat(data.data.carbonFootprint);
+                    const peak = parseFloat(data.data.peakUsage);
+                    animateNumber(document.getElementById('todayUsage'), 0, usage, 1000);
+                    animateNumber(document.getElementById('carbonFootprint'), 0, carbon, 1000);
+                    animateNumber(document.getElementById('peakUsage'), 0, peak, 1000);
+                    if (document.getElementById('estimatedCost')) document.getElementById('estimatedCost').innerHTML = data.data.estimatedCost;
+                    await updateGauges(usage);
+                    const dailyGoal = 20;
+                    const pct = Math.min((usage / dailyGoal) * 100, 100);
+                    updateProgressRing(pct);
+                    if (document.getElementById('dailyTarget')) document.getElementById('dailyTarget').innerHTML = `${dailyGoal} kWh`;
+                    if (usage < 10 && usage > 0) {
+                        showConfetti();
+                        showToast('🎉 Amazing! Energy Saver Badge Earned! 🇪🇹');
+                        if (document.getElementById('achievementMessage')) document.getElementById('achievementMessage').innerHTML = "🏆 Energy Saver Badge!";
+                    } else {
+                        if (document.getElementById('achievementMessage')) document.getElementById('achievementMessage').innerHTML = "💪 Keep going for Energy Saver badge!";
+                    }
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        async function loadPrediction() {
+            try {
+                const res = await fetch(`${API_URL}/analytics/predict/${userId}`);
+                const data = await res.json();
+                if (data.success) {
+                    if (document.getElementById('predictionValue')) document.getElementById('predictionValue').innerHTML = data.data.predictedUsage + ' kWh';
+                    if (document.getElementById('predictionMessage')) document.getElementById('predictionMessage').innerHTML = data.data.suggestion;
+                }
+            } catch(e) {}
+        }
+
+        async function loadComparison() {
+            try {
+                const res = await fetch(`${API_URL}/analytics/compare/${userId}`);
+                const data = await res.json();
+                if (data.success) {
+                    animateNumber(document.getElementById('yourUsage'), 0, parseFloat(data.data.yourUsage), 800);
+                    animateNumber(document.getElementById('avgUsage'), 0, parseFloat(data.data.averageUsage), 800);
+                    animateNumber(document.getElementById('percentile'), 0, parseFloat(data.data.percentile), 800);
+                    if (document.getElementById('comparisonMessage')) document.getElementById('comparisonMessage').innerHTML = data.data.message;
+                }
+            } catch(e) {}
+        }
+
+        async function loadDevices() {
+            const div = document.getElementById('devicesList');
+            if (!div) return;
+            div.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-pulse"></i> Loading devices...</div>';
+            try {
+                const res = await fetch(`${API_URL}/devices/user/${userId}`);
+                const data = await res.json();
+                if (data.success && data.data.length > 0) {
+                    div.innerHTML = '';
+                    for (let d of data.data) {
+                        const kwh = (d.wattage * d.quantity * d.avgDailyHours / 1000).toFixed(2);
+                        div.innerHTML += `
+                            <div class="device-item">
+                                <div>
+                                    <h4>${getDeviceIcon(d.category)} ${d.name} <span class="badge badge-info">${d.category}</span></h4>
+                                    <p>${d.wattage}W | ${d.avgDailyHours} hrs/day | Qty: ${d.quantity}</p>
+                                </div>
+                                <div>
+                                    <span style="font-size:18px; font-weight:bold; color:#667eea;">${kwh} kWh/day</span>
+                                    <button class="btn btn-danger" onclick="deleteDevice('${d._id}')" style="margin-left:15px;"><i class="fas fa-trash"></i> Remove</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    div.innerHTML = '<div style="padding:40px; text-align:center;"><i class="fas fa-microchip"></i> 📭 No devices yet. Add your first device above!</div>';
+                }
+            } catch(e) { div.innerHTML = '<div style="padding:40px; text-align:center;"><i class="fas fa-exclamation-triangle"></i> Error loading devices. Make sure backend is running.</div>'; }
+        }
+
+        async function loadCharts() {
+            try {
+                const weeklyRes = await fetch(`${API_URL}/analytics/weekly/${userId}`);
+                const weekly = await weeklyRes.json();
+                const ctx1 = document.getElementById('weeklyChart');
+                if (ctx1 && weekly.success) {
+                    if (weeklyChart) weeklyChart.destroy();
+                    weeklyChart = new Chart(ctx1, {
+                        type: 'line',
+                        data: { labels: weekly.data.map(d => d.day), datasets: [{ label: 'kWh', data: weekly.data.map(d => d.consumption), borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,0.1)', fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#667eea' }] },
+                        options: { responsive: true }
+                    });
+                }
+                const catRes = await fetch(`${API_URL}/analytics/by-category/${userId}`);
+                const cats = await catRes.json();
+                const ctx2 = document.getElementById('categoryChart');
+                if (ctx2 && cats.success) {
+                    if (categoryChart) categoryChart.destroy();
+                    categoryChart = new Chart(ctx2, {
+                        type: 'doughnut',
+                        data: { labels: cats.data.map(c => c.category), datasets: [{ data: cats.data.map(c => c.consumption), backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#FF6B6B'] }] },
+                        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        async function addDevice() {
+            const name = document.getElementById('deviceName').value;
+            const category = document.getElementById('deviceCategory').value;
+            const wattage = parseInt(document.getElementById('deviceWattage').value);
+            const hours = parseFloat(document.getElementById('deviceHours').value);
+            const qty = parseInt(document.getElementById('deviceQuantity').value);
+            if (!name || !wattage) { showToast('Please fill device name and wattage', true); return; }
+            if (hours > 24) { showToast('Hours cannot exceed 24', true); return; }
+            try {
+                const res = await fetch(`${API_URL}/devices`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user: userId, name, category, wattage, avgDailyHours: hours, quantity: qty })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Device added successfully!');
+                    document.getElementById('deviceName').value = '';
+                    document.getElementById('deviceWattage').value = '';
+                    loadAll();
+                } else { showToast('Error: ' + data.error, true); }
+            } catch(e) { showToast('Error adding device', true); }
+        }
+
+        async function deleteDevice(id) {
+            if (confirm('Remove this device?')) {
+                try { await fetch(`${API_URL}/devices/${id}`, { method: 'DELETE' }); showToast('🗑️ Device removed'); loadAll(); }
+                catch(e) { showToast('Error', true); }
+            }
+        }
+
+        function exportCSV() { window.open(`${API_URL}/export/csv/${userId}`, '_blank'); showToast('📥 CSV Download started!'); }
+        function exportPDF() { window.open(`${API_URL}/export/pdf/${userId}`, '_blank'); showToast('📄 PDF Download started!'); }
+        async function shareReport() {
+            const res = await fetch(`${API_URL}/analytics/summary/${userId}`);
+            const data = await res.json();
+            if (navigator.share) navigator.share({ title: 'My Energy Report', text: `I used ${data.data.todayUsage} kWh today! ⚡`, url: window.location.href });
+            else navigator.clipboard.writeText(window.location.href);
+        }
+        async function showQR() {
+            try { const res = await fetch(`${API_URL}/export/qr/${userId}`); const data = await res.json(); if (data.success) { document.getElementById('qrImage').src = data.qrCode; document.getElementById('qrModal').style.display = 'flex'; } }
+            catch(e) { showToast('Error generating QR', true); }
+        }
+        function closeQR() { document.getElementById('qrModal').style.display = 'none'; }
+
+        async function setBudget() {
+            let budget = document.getElementById('budgetAmount').value;
+            if (!budget) { showToast('Enter budget amount', true); return; }
+            localStorage.setItem('monthlyBudget', budget);
+            let currentCost = parseFloat(document.getElementById('estimatedCost').innerText.replace('$', '')) * 30;
+            let pct = (currentCost / budget) * 100;
+            document.getElementById('budgetStatus').innerHTML = `<div class="tip-card">💰 Budget: ${budget} ETB | Spent: ${currentCost.toFixed(2)} ETB | ${pct.toFixed(0)}% used</div><progress value="${pct}" max="100" style="width:100%; height:8px;"></progress>`;
+            if (pct > 80) showToast('⚠️ You have used 80% of your budget!', true);
+            showToast(`Budget set to ${budget} ETB`);
+        }
+
+        async function loadBudgetStatus() {
+            let budget = localStorage.getItem('monthlyBudget');
+            if (budget) {
+                let currentCost = parseFloat(document.getElementById('estimatedCost').innerText.replace('$', '')) * 30;
+                let pct = (currentCost / budget) * 100;
+                document.getElementById('budgetStatus').innerHTML = `<div class="tip-card">💰 Budget: ${budget} ETB | Spent: ${currentCost.toFixed(2)} ETB | ${pct.toFixed(0)}% used</div><progress value="${pct}" max="100" style="width:100%; height:8px;"></progress>`;
+                if (pct > 80) showToast('⚠️ You have used 80% of your budget!', true);
+            }
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            showToast(document.body.classList.contains('dark-mode') ? '🌙 Dark mode enabled' : '☀️ Light mode enabled');
+        }
+
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+        // Initialize all Ethiopian features
+        if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+        loadEthiopianTips();
+        updateSeasonDisplay();
+        loadAll();
+        
+        // Make functions available globally
+        window.quickAddDevice = quickAddDevice;
+        window.addDevice = addDevice;
+        window.deleteDevice = deleteDevice;
+        window.exportCSV = exportCSV;
+        window.exportPDF = exportPDF;
+        window.shareReport = shareReport;
+        window.showQR = showQR;
+        window.closeQR = closeQR;
+        window.setBudget = setBudget;
+        window.toggleDarkMode = toggleDarkMode;
+        window.logout = logout;
+        window.animateChart = animateChart;
+        window.showDetail = showDetail;
+    </script>
+</body>
+</html>

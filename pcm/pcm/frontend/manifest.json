@@ -1,0 +1,35 @@
+{
+  "name": "Ultimate Power Monitor",
+  "short_name": "PowerMon",
+  "description": "Track and optimize your energy consumption with AI predictions",
+  "start_url": "/frontend/login.html",
+  "display": "standalone",
+  "theme_color": "#667eea",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "categories": ["lifestyle", "utilities", "energy"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23667eea'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='white'%3E⚡%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "View your energy dashboard",
+      "url": "/frontend/dashboard.html",
+      "icons": [{ "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📊%3C/text%3E%3C/svg%3E", "sizes": "any" }]
+    },
+    {
+      "name": "Add Device",
+      "short_name": "Add",
+      "description": "Add a new device",
+      "url": "/frontend/dashboard.html?action=add",
+      "icons": [{ "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E<text y='.9em' font-size='90'%3E🔌%3C/text%3E%3C/svg%3E", "sizes": "any" }]
+    }
+  ]
+}

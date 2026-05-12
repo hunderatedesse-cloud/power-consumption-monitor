@@ -1,0 +1,12 @@
+node_modules/
+.env
+*.log
+*.zip
+.DS_Store
+Thumbs.db
+pcm/pcm/backend/node_modules/
+pcm/pcm/frontend/node_modules/
+package-lock.json
+pcm/pcm/backend/package-lock.json
+pcm/pcm/frontend/package-lock.json
+power-consumption-monitor-main.zip

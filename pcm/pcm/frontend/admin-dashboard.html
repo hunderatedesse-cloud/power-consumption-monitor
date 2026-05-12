@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Power Monitor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; }
+        .navbar {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .container { max-width: 1400px; margin: 30px auto; padding: 20px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .stat-value { font-size: 32px; font-weight: bold; color: #667eea; }
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #667eea; color: white; }
+        tr:hover { background: #f8f9fa; }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-danger:hover { background: #c82333; }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .badge-active { background: #28a745; color: white; }
+        .badge-inactive { background: #dc3545; color: white; }
+        .filter-buttons { margin-bottom: 20px; }
+        .filter-btn {
+            background: #f0f2f5;
+            border: none;
+            padding: 8px 16px;
+            margin-right: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .filter-btn.active { background: #667eea; color: white; }
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            table { font-size: 12px; }
+            th, td { padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h2>⚡ Admin Dashboard</h2>
+        <div>
+            <span>👑 <span id="adminName"></span></span>
+            <button class="logout-btn" onclick="adminLogout()" style="margin-left: 15px;">Logout</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value" id="totalUsers">--</div><div>Total Users</div></div>
+            <div class="stat-card"><div class="stat-value" id="totalDevices">--</div><div>Total Devices</div></div>
+            <div class="stat-card"><div class="stat-value" id="totalKwh">--</div><div>Total kWh/day</div></div>
+            <div class="stat-card"><div class="stat-value" id="activeUsers">--</div><div>Active Users</div></div>
+        </div>
+        
+        <div class="filter-buttons">
+            <button class="filter-btn active" onclick="filterUsers('all')">All Users</button>
+            <button class="filter-btn" onclick="filterUsers('active')">Active</button>
+            <button class="filter-btn" onclick="filterUsers('inactive')">Inactive</button>
+        </div>
+        
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search by name or email...">
+        
+        <h3>👥 Registered Users</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Devices</th>
+                        <th>Usage (kWh)</th>
+                        <th>Joined</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        const token = localStorage.getItem('adminToken');
+        let allUsers = [];
+        let currentFilter = 'all';
+        
+        if (!token) {
+            window.location.href = 'admin-login.html';
+        }
+        
+        document.getElementById('adminName').innerText = localStorage.getItem('adminName') || 'Admin';
+        
+        async function loadStats() {
+            try {
+                const res = await fetch(API_URL + '/admin/analytics', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('totalUsers').innerText = data.data.totalUsers;
+                    document.getElementById('totalDevices').innerText = data.data.totalDevices;
+                    document.getElementById('totalKwh').innerText = data.data.totalConsumption;
+                    document.getElementById('activeUsers').innerText = data.data.activeUsers || data.data.totalUsers;
+                }
+            } catch(e) { console.error('Stats error:', e); }
+        }
+        
+        async function loadUsers() {
+            try {
+                const res = await fetch(API_URL + '/admin/users', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    allUsers = data.users;
+                    applyFilter();
+                }
+            } catch(e) { console.error('Users error:', e); }
+        }
+        
+        function applyFilter() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = [...allUsers];
+            
+            if (currentFilter === 'active') {
+                filtered = filtered.filter(u => u.deviceCount > 0);
+            } else if (currentFilter === 'inactive') {
+                filtered = filtered.filter(u => u.deviceCount === 0);
+            }
+            
+            if (searchTerm) {
+                filtered = filtered.filter(u => 
+                    u.name.toLowerCase().includes(searchTerm) || 
+                    u.email.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            const tbody = document.getElementById('usersTableBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">No users found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(user => `
+                <tr>
+                    <td><strong>${user.name}</strong></td>
+                    <td>${user.email}</td>
+                    <td><span class="badge badge-active">${user.deviceCount || 0} devices</span></td>
+                    <td>${user.totalConsumption || 0} kWh</td>
+                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td><span class="badge ${user.deviceCount > 0 ? 'badge-active' : 'badge-inactive'}">${user.deviceCount > 0 ? 'Active' : 'Inactive'}</span></td>
+                    <td><button class="btn-danger" onclick="deleteUser('${user._id}')">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+        
+        function filterUsers(type) {
+            currentFilter = type;
+            const btns = document.querySelectorAll('.filter-btn');
+            const types = ['all', 'active', 'inactive'];
+            btns.forEach((btn, i) => {
+                btn.classList.toggle('active', types[i] === type);
+            });
+            applyFilter();
+        }
+        
+        async function deleteUser(userId) {
+            if (confirm('⚠️ Are you sure you want to delete this user? This action cannot be undone!')) {
+                try {
+                    const res = await fetch(API_URL + '/admin/users/' + userId, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('✅ User deleted successfully!');
+                        loadStats();
+                        loadUsers();
+                    } else {
+                        alert('❌ Error deleting user: ' + data.message);
+                    }
+                } catch(e) { alert('Error deleting user'); }
+            }
+        }
+        
+        function adminLogout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminName');
+            localStorage.removeItem('adminRole');
+            window.location.href = 'admin-login.html';
+        }
+        
+        document.getElementById('searchInput').addEventListener('input', applyFilter);
+        
+        loadStats();
+        loadUsers();
+    </script>
+</body>
+</html>
