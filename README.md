@@ -41,10 +41,10 @@ Analytics & Tracking
  🛠️ Tech Stack
  Layer With Technology
  
-Backend  Node.js, Express.js 
-Frontend HTML5, CSS3, JavaScript, Chart.js
-Database MongoDB, Mongoose ODM
-Authentication JWT, bcryptjs 
-Email Nodemailer (Gmail SMTP)
-Export  PDFKit, QRCode
+1.Backend  Node.js, Express.js 
+2.Frontend HTML5, CSS3, JavaScript, Chart.js
+3.Database MongoDB, Mongoose ODM
+4.Authentication JWT, bcryptjs 
+5.Email Nodemailer (Gmail SMTP)
+6.Export  PDFKit, QRCode
 
